@@ -72,7 +72,7 @@ class Energy(object):
 
     def getTotalEnergyConsumption(self, intf):
         state = self.getState(intf)
-        # energy to decrease = time * voltage (mA) * current
+        # energy to decrease = time * voltage (v) * current (mA)
         if state == 'idle':
             return self.get_energy(intf, 0.273)
         elif state == 'tx':
