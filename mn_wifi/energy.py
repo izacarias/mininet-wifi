@@ -16,14 +16,12 @@ class Energy(object):
     cat_dev = 'cat /proc/net/dev | grep {} |  awk \'{}\''
 
     def __init__(self, nodes):
-        self.start_simulation = 0
         Energy.thread_ = thread(target=self.start, args=(nodes,))
         Energy.thread_.daemon = True
         Energy.thread_._keep_alive = True
         Energy.thread_.start()
 
     def start(self, nodes):
-        self.start_simulation = self.get_time()
 
         for node in nodes:
             for intf in node.wintfs.values():
@@ -34,7 +32,7 @@ class Energy(object):
                sleep(1)  # set sleep time to 1 second
                for node in nodes:
                    for intf in node.wintfs.values():
-                       intf.consumption = self.getTotalEnergyConsumption(intf)
+                       intf.consumption += self.getTotalEnergyConsumption(intf)
         except:
             error("Error with the energy consumption function\n")
 
@@ -49,13 +47,6 @@ class Energy(object):
             print(f"Erro ao converter para inteiro: '{cleaned_value}'")
             return None  # Ou um valor padrão caso desejado
 
-    @staticmethod
-    def get_time():
-        return time()
-
-    def get_duration(self):
-        return self.get_time() - self.start_simulation
-
     def get_cat_dev(self, intf, col):
         p = '{print $%s}' % col
         value = intf.cmd(Energy.cat_dev.format(intf.name, p)).replace("\n", "")
@@ -68,14 +59,16 @@ class Energy(object):
         if rx != intf.rx:
             intf.rx = rx
             return True
+        return False
 
     def get_tx_packet(self, intf):
         tx = self.get_cat_dev(intf, 11)
         if tx != intf.tx:
             intf.tx = tx
             return True
+        return False
 
-    def getState(self, intf):
+    def get_state(self, intf):
         if self.get_rx_packet(intf):
             return 'rx'
         elif self.get_tx_packet(intf):
@@ -83,10 +76,10 @@ class Energy(object):
         return 'idle'
 
     def get_energy(self, intf, factor):
-        return self.get_duration() * factor * intf.voltage
+        return intf.voltage * factor
 
     def getTotalEnergyConsumption(self, intf):
-        state = self.getState(intf)
+        state = self.get_state(intf)
         # energy to decrease = time * voltage (mA) * current
         if state == 'idle':
             return self.get_energy(intf, 0.273)
