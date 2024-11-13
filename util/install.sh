@@ -186,6 +186,7 @@ function wifi_deps {
                             python-pep8 ${PYPKG}-pexpect ${PYPKG}-tk
     else
         pf=pyflakes
+	pep8=pep8
         if [ $PYTHON_VERSION == 3 ]; then
             ln -sf python3 /usr/bin/python
         fi
@@ -193,9 +194,10 @@ function wifi_deps {
         # causes Python 2 to be installed, which is exactly NOT what we want.
         if [ "$DIST" = "Ubuntu" ] &&  [ `expr $RELEASE '>=' 20.04` = "1" ]; then
                 pf=pyflakes3
+		pep8=python3-pep8
         fi
         $install gcc make socat psmisc xterm ssh iperf telnet \
-                 ethtool help2man $pf pylint pep8 \
+                 ethtool help2man $pf pylint $pep8 \
                  net-tools \
                  ${PYPKG}-pexpect ${PYPKG}-tk
         # Install pip
